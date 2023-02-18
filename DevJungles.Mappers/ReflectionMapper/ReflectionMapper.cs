@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace DevJungles.Mappers.ReflectionMapper;
 
@@ -13,20 +14,32 @@ public class ReflectionMapper : IMapper
 
     public TDest Map<TDest>(object source) where TDest : new()
     {
-        var sourceProps = source.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
-        var destProps = typeof(TDest).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        return (TDest)Map(typeof(TDest), source);
+    }
 
-        var result = new TDest();
+    private object Map(Type destType, object source)
+    {
+        var sourceProps = source?.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        var destProps = destType.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        var result = Activator.CreateInstance(destType);
 
         foreach (var destProp in destProps)
         {
-            var sourceProp = sourceProps.FirstOrDefault(x => x.Name == destProp.Name);
+            var sourceProp = sourceProps?.FirstOrDefault(x => x.Name == destProp.Name);
             if (sourceProp != null && sourceProp.CanRead && destProp.CanWrite)
             {
-                destProp.SetValue(result, sourceProp.GetValue(source));
+                object? value = sourceProp.GetValue(source);
+
+                if (value == null || !value.GetType().IsAssignableTo(destProp.PropertyType))
+                {
+                    value = Map(destProp.PropertyType, value);
+                }
+
+                destProp.SetValue(result, value);
+
             }
         }
 
-        return result;
+        return result ?? new object();
     }
 }
