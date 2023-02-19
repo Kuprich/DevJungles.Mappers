@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace DevJungles.Mappers.ReflectionMapper;
 
@@ -28,14 +27,14 @@ public class ReflectionMapper : IMapper
             var sourceProp = sourceProps?.FirstOrDefault(x => x.Name == destProp.Name);
             if (sourceProp != null && sourceProp.CanRead && destProp.CanWrite)
             {
-                object? value = sourceProp.GetValue(source);
+                object? sourcePropValue = sourceProp.GetValue(source);
 
-                if (value == null || !value.GetType().IsAssignableTo(destProp.PropertyType))
+                if (sourcePropValue != null && !sourcePropValue.GetType().IsAssignableTo(destProp.PropertyType))
                 {
-                    value = Map(destProp.PropertyType, value);
+                    sourcePropValue = Map(destProp.PropertyType, sourcePropValue);
                 }
 
-                destProp.SetValue(result, value);
+                destProp.SetValue(result, sourcePropValue);
 
             }
         }

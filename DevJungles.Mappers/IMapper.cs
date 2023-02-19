@@ -1,4 +1,4 @@
-﻿namespace DevJungles.Mappers.ReflectionMapper;
+﻿namespace DevJungles.Mappers;
 
 interface IMapper
 {
